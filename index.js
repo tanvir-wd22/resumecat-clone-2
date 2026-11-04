@@ -1,11 +1,13 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(cors());
 
 // 1. Instantiate the client globally ONE TIME to generate the connection pool
 const client = new MongoClient(
@@ -50,13 +52,14 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+// GET /resumes -> returns all resume templates
 app.get("/resumes", async (req, res) => {
   try {
-    const allResumes = await resumesColl.find({}).toArray();
-    res.json(allResumes);
-  } catch (err) {
-    console.error("Database Query Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    const allResumes = await resumesColl.find().toArray();
+    res.status(200).json(allResumes);
+  } catch (error) {
+    console.log("Failed to fetch resumes:", error);
+    res.status(500).json({ message: "Failed to fetch resumes" });
   }
 });
 
@@ -66,7 +69,7 @@ app.get("/resumes", async (req, res) => {
 process.on("SIGINT", async () => {
   console.log("\nShutting down application cleanly...");
   try {
-    await client.close(); // Cleanly destroys the connection pool pools upon app exit
+    await client.close();
     console.log("MongoDB pool closed successfully.");
     process.exit(0);
   } catch (err) {
