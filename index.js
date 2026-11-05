@@ -16,7 +16,8 @@ const client = new MongoClient(
 
 // Variables exposed globally for your API routes to share
 let database;
-let resumesColl;
+let resumeTemplatesColl;
+let resumeExamplesColl;
 
 // 2. Wrap initialization in an async function to maintain recommended startup order
 async function startServer() {
@@ -27,7 +28,8 @@ async function startServer() {
 
     // Select the DB and Collection target from the client pool
     database = client.db("resumecatCloneDB");
-    resumesColl = database.collection("resumes");
+    resumeTemplatesColl = database.collection("resumeTemplates");
+    resumeExamplesColl = database.collection("resumeExamples");
 
     // 3. ONLY start listening for HTTP traffic once the database is secure
     app.listen(port, () => {
@@ -52,14 +54,28 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-// GET /resumes -> returns all resume templates
-app.get("/resumes", async (req, res) => {
+// GET /resume templates -> returns all resume templates
+app.get("/resumeTemplates", async (req, res) => {
   try {
-    const allResumes = await resumesColl.find().toArray();
-    res.status(200).json(allResumes);
+    const allTemplates = await resumeTemplatesColl.find().toArray();
+    res.status(200).json(allTemplates);
   } catch (error) {
     console.log("Failed to fetch resumes:", error);
     res.status(500).json({ message: "Failed to fetch resumes" });
+  }
+});
+
+// GET /resume examples -> return all resume examples
+app.get("/resumeExamples", async (req, res) => {
+  try {
+    const allExamples = await resumeExamplesColl
+      .find()
+      .sort({ order: 1 })
+      .toArray();
+    res.status(200).json(allExamples);
+  } catch (error) {
+    console.log("failed to fetch resume examples", error);
+    res.status(500).json({ message: "failed to fetch resume examples" });
   }
 });
 
